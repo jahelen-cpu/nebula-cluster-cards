@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deep Sky Atlas | 성운과 성단</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+    :root {
+      --ink: #edf2f7;
+      --muted: #aab7c7;
+      --line: rgba(196, 215, 235, .18);
+      --panel: rgba(17, 27, 40, .82);
+      --cyan: #8ed8e7;
+      --gold: #f4c56b;
+      --coral: #f29a82;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #0b1119;
+      font-family: 'Manrope', 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 82% 12%, rgba(82, 133, 162, .19), transparent 27%),
+        radial-gradient(circle at 12% 92%, rgba(116, 82, 119, .17), transparent 31%),
+        linear-gradient(135deg, #0b1119 0%, #101c29 48%, #0a1018 100%);
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: .16;
+      background-image: radial-gradient(rgba(255,255,255,.55) .6px, transparent .6px);
+      background-size: 38px 38px;
+      mask-image: linear-gradient(to bottom, black, transparent 90%);
+    }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 40px 0 64px; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 30px; border-bottom: 1px solid var(--line); }
+    .eyebrow { color: var(--cyan); font: 500 11px 'DM Mono', monospace; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+    h1 { font-size: clamp(34px, 5vw, 60px); line-height: 1; letter-spacing: -.055em; margin: 0 0 13px; font-weight: 800; }
+    .intro { color: var(--muted); font-size: 14px; line-height: 1.75; max-width: 560px; margin: 0; }
+    .status { border: 1px solid var(--line); padding: 13px 16px; min-width: 160px; background: rgba(255,255,255,.025); }
+    .status span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 5px; }
+    .status strong { font: 500 20px 'DM Mono', monospace; color: var(--gold); }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .filter, .action { border: 1px solid var(--line); background: rgba(255,255,255,.035); padding: 9px 13px; font-size: 12px; transition: .2s ease; }
+    .filter:hover, .action:hover, .filter.active { border-color: var(--cyan); color: #07131b; background: var(--cyan); }
+    .action { color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+    .card-wrap { min-width: 0; perspective: 1300px; min-height: 398px; animation: rise .7s both; }
+    .card-wrap:nth-child(2) { animation-delay: .08s; } .card-wrap:nth-child(3) { animation-delay: .16s; } .card-wrap:nth-child(4) { animation-delay: .24s; } .card-wrap:nth-child(5) { animation-delay: .32s; }
+    .card { position: relative; width: 100%; height: 100%; min-height: 398px; transform-style: preserve-3d; transition: transform .72s cubic-bezier(.2,.8,.2,1); cursor: pointer; }
+    .card.is-flipped { transform: rotateY(180deg); }
+    .face { position: absolute; inset: 0; backface-visibility: hidden; border: 1px solid var(--line); overflow: hidden; background: var(--panel); }
+    .front { display: flex; flex-direction: column; justify-content: space-between; padding: 18px; }
+    .front::before { content: ''; position: absolute; width: 170px; height: 170px; border-radius: 50%; right: -48px; top: -44px; background: var(--accent); opacity: .13; filter: blur(2px); }
+    .index { display: flex; align-items: center; justify-content: space-between; position: relative; }
+    .number { color: var(--accent); font: 500 11px 'DM Mono', monospace; letter-spacing: .12em; }
+    .hint { color: var(--muted); font-size: 10px; }
+    .symbol { position: relative; display: grid; place-items: center; height: 190px; color: var(--accent); }
+    .symbol svg { width: 178px; height: 178px; overflow: visible; }
+    .symbol circle { fill: var(--accent); stroke: #fff; stroke-width: 1.5; }
+    .symbol line { stroke: currentColor; stroke-width: 1.25; opacity: .8; }
+    .symbol text { fill: currentColor; font: 500 10px 'DM Mono', monospace; }
+    .korean { font-family: 'Noto Sans KR', sans-serif; font-weight: 900; font-size: 29px; letter-spacing: -.08em; margin: 0 0 5px; }
+    .english { color: var(--muted); font-size: 16px; margin: 0; }
+    .meta { border-top: 1px solid var(--line); padding-top: 13px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .meta b { color: var(--ink); font-weight: 600; }
+    .back { transform: rotateY(180deg); background: #101a25; display: flex; flex-direction: column; }
+    .back img { width: 100%; height: 100%; object-fit: contain; object-position: center top; background: #081019; }
+    .back-category { position: absolute; left: 12px; right: 12px; bottom: 88px; z-index: 2; color: var(--accent); font: 700 13px/1.5 'Noto Sans KR', sans-serif; letter-spacing: -.03em; }
+    .back-label { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; padding: 10px 12px; background: rgba(5, 12, 20, .86); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); }
+    .back-label strong { display: block; font-size: 13px; margin-bottom: 3px; } .back-label span { color: var(--muted); font-size: 10px; }
+    .note { color: var(--muted); font-size: 11px; margin: 22px 0 0; text-align: center; }
+    .is-hidden { display: none; }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 980px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 28px, 500px); padding-top: 25px; }
+      header { display: block; } .status { margin-top: 24px; } .toolbar { display: block; } .actions { margin-top: 12px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .card-wrap, .card { min-height: 330px; }
+      .front { padding: 13px; } .symbol { height: 135px; } .symbol svg { width: 128px; height: 128px; } .korean { font-size: 23px; } .english { font-size: 13px; } .meta { font-size: 10px; }
+    }
+    @media (max-width: 390px) { .grid { grid-template-columns: 1fr; } .card-wrap, .card { min-height: 380px; } .symbol { height: 180px; } .symbol svg { width: 160px; height: 160px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">Stellarium / Deep Sky Objects</div>
+        <h1>성운과 성단</h1>
+        <p class="intro">하늘의 흐릿한 보석들을 다섯 가지 분류로 살펴보세요. 카드를 누르면 폴더에 있는 대표 천체 자료가 뒷면에서 펼쳐집니다.</p>
+      </div>
+      <div class="status"><span>COLLECTION</span><strong id="count">05 / 05</strong></div>
+    </header>
+
+    <section class="toolbar" aria-label="카드 필터와 동작">
+      <div class="filters">
+        <button class="filter active" data-filter="all">전체</button>
+        <button class="filter" data-filter="nebula">성운</button>
+        <button class="filter" data-filter="cluster">성단</button>
+      </div>
+      <div class="actions"><button class="action" id="flipAll">전체 뒤집기</button> <button class="action" id="reset">앞면으로</button></div>
+    </section>
+
+    <section class="grid" id="grid" aria-label="성운과 성단 카드 목록"></section>
+    <p class="note">카드는 클릭하거나 Enter 키로 뒤집을 수 있습니다 · Stellarium 성도 기호를 참고한 학습용 카드</p>
+  </main>
+  <script>
+    const objects = [
+      ['nebula', '암흑성운', 'Dark Nebula', 'B33', '말머리 성운', 'Horsehead Nebula', 'assets/B33.png', '#bf9bda', '빛을 가리는 먼지와 기체', '어두운 실루엣으로 보이는 성간 구름'],
+      ['nebula', '암흑성운', 'Dark Nebula', 'C99', '석탄자루 성운', 'Coalsack Nebula', 'assets/C99.png', '#bf9bda', '질량이 큰 먼지 구름', '남십자자리에서 검은 실루엣으로 보이는 성운'],
+      ['nebula', '암흑성운', 'Dark Nebula', 'B59', '파이프 성운', 'Pipe Nebula', 'assets/B59.png', '#bf9bda', '길게 뻗은 먼지 구름', '뱀주인자리의 대표적인 암흑성운'],
+      ['nebula', '암흑성운', 'Dark Nebula', 'B68', '바너드 68', 'Barnard 68', 'assets/B68.png', '#bf9bda', '빛을 거의 차단하는 작은 구름', '매우 차갑고 밀도가 높은 암흑성운'],
+      ['nebula', '암흑성운', 'Dark Nebula', 'M16', '창조의 기둥', 'Pillars of Creation', 'assets/M16.png', '#bf9bda', '별을 만드는 먼지 기둥', '독수리 성운 내부의 대표적인 암흑 구조'],
+      ['nebula', '방출성운', 'Emission Nebula', 'M42', '오리온 성운', 'Orion Nebula', 'assets/M42.png', '#f29a82', '스스로 빛을 내는 가스 구름', '젊은 별이 태어나는 가장 유명한 방출성운'],
+      ['nebula', '방출성운', 'Emission Nebula', 'M16', '독수리 성운', 'Eagle Nebula', 'assets/M16-emission.png', '#f29a82', '거대한 별 형성 지역', '창조의 기둥을 품은 유명한 방출성운'],
+      ['nebula', '방출성운', 'Emission Nebula', 'NGC 2237', '장미 성운', 'Rosette Nebula', 'assets/NGC2237.png', '#f29a82', '장미꽃 모양의 수소 구름', '젊은 별들의 강한 자외선으로 빛나는 성운'],
+      ['nebula', '방출성운', 'Emission Nebula', 'M8', '석호 성운', 'Lagoon Nebula', 'assets/M8.png', '#f29a82', '붉게 빛나는 별 탄생 지역', '석호처럼 보이는 유명한 방출성운'],
+      ['nebula', '방출성운', 'Emission Nebula', 'M20', '삼열 성운', 'Trifid Nebula', 'assets/M20.png', '#f29a82', '방출·반사·암흑성운의 조합', '서로 다른 성운의 특징을 한 번에 볼 수 있는 대상'],
+      ['nebula', '반사성운', 'Reflection Nebula', 'M78', 'M78 반사성운', 'M78 Reflection Nebula', 'assets/M78.png', '#8ed8e7', '별빛을 반사하는 먼지 구름', '주변 별빛을 산란시켜 푸르게 보이는 성운'],
+      ['nebula', '반사성운', 'Reflection Nebula', 'NGC 7023', '아이리스 성운', 'Iris Nebula', 'assets/NGC7023.png', '#8ed8e7', '꽃잎처럼 퍼진 푸른 성운', '중심 별빛이 주변 먼지에 반사되는 성운'],
+      ['nebula', '반사성운', 'Reflection Nebula', 'NGC 1977', '러닝맨 성운', 'Running Man Nebula', 'assets/NGC1977.png', '#8ed8e7', '사람처럼 보이는 푸른 구름', '오리온 대성운 근처의 반사성운'],
+      ['nebula', '반사성운', 'Reflection Nebula', 'IC 2118', '마녀머리 성운', 'Witch Head Nebula', 'assets/IC2118.png', '#8ed8e7', '마녀의 옆얼굴을 닮은 성운', '리겔의 빛을 반사하는 거대한 구름'],
+      ['nebula', '반사성운', 'Reflection Nebula', 'NGC 1435', '메로페 성운', 'Merope Nebula', 'assets/NGC1435.png', '#8ed8e7', '플레이아데스 주변의 푸른 성운', '메로페의 별빛이 먼지에 반사되어 보이는 성운'],
+      ['cluster', '산개성단', 'Open Cluster', 'M45', '좀생이별', 'Pleiades', 'assets/M45.png', '#f4c56b', '수백 개의 젊은 별 무리', '황소자리의 가장 유명한 산개성단'],
+      ['cluster', '산개성단', 'Open Cluster', 'C41', '히아데스', 'Hyades', 'assets/C41.png', '#f4c56b', '지구에서 가까운 별 무리', '황소자리의 V자 모양 산개성단'],
+      ['cluster', '산개성단', 'Open Cluster', 'M44', '프레세페', 'Praesepe', 'assets/M44.png', '#f4c56b', '벌집처럼 모인 젊은 별들', '게자리의 대표적인 산개성단'],
+      ['cluster', '산개성단', 'Open Cluster', 'NGC 869', '페르세우스 이중성단', 'Perseus Double Cluster', 'assets/NGC869.png', '#f4c56b', '나란히 보이는 두 성단', 'NGC 869와 NGC 884로 이루어진 이중성단'],
+      ['cluster', '산개성단', 'Open Cluster', 'M6', '나비성단', 'Butterfly Cluster', 'assets/M6.png', '#f4c56b', '나비 모양의 별 무리', '전갈자리 방향에서 보이는 산개성단'],
+      ['cluster', '구상성단', 'Globular Cluster', 'M13', '헤라클레스 성단', 'Hercules Globular Cluster', 'assets/M13.png', '#d4b5ff', '수십만 개의 오래된 별 무리', '우리 은하에서 가장 유명한 구상성단'],
+      ['cluster', '구상성단', 'Globular Cluster', 'M22', '궁수자리 성단', 'Sagittarius Globular Cluster', 'assets/M22.png', '#d4b5ff', '은하 중심 방향의 밝은 성단', '다양한 색의 별들이 빽빽하게 모인 구상성단'],
+      ['cluster', '구상성단', 'Globular Cluster', 'M4', '거미 성단', 'Globular Cluster', 'assets/M4.png', '#d4b5ff', '전갈자리 근처의 구상성단', '밝은 중심부와 거미줄처럼 퍼진 별들'],
+      ['cluster', '구상성단', 'Globular Cluster', 'C80', '오메가 센타우리 성단', 'Omega Centauri', 'assets/C80.png', '#d4b5ff', '우리 은하에서 가장 크고 밝은 성단', '수백만 개의 별이 모인 거대한 구상성단'],
+      ['cluster', '구상성단', 'Globular Cluster', 'C106', '사십칠투칸 성단', '47 Tucanae', 'assets/C106.png', '#d4b5ff', '남반구의 밝은 구상성단', '조밀한 중심부가 인상적인 대표 구상성단']
+    ];
+    const grid = document.querySelector('#grid');
+    const pattern = '<svg viewBox="0 0 160 160"><line x1="30" y1="112" x2="64" y2="48"/><line x1="64" y1="48" x2="122" y2="72"/><line x1="64" y1="48" x2="105" y2="126"/><circle cx="30" cy="112" r="4"/><circle cx="64" cy="48" r="4"/><circle cx="122" cy="72" r="4"/><circle cx="105" cy="126" r="4"/><text x="72" y="67">LABEL</text></svg>';
+    grid.innerHTML = objects.map((object, index) => {
+      const [type, koreanType, englishType, code, koreanName, englishName, image, accent, feature, detail] = object;
+      return `<article class="card-wrap" data-type="${type}"><div class="card" tabindex="0" role="button" aria-label="${koreanName} 카드 뒤집기"><div class="face front" style="--accent:${accent}"><div class="index"><span class="number">${koreanType}</span><span class="hint">CLICK TO FLIP</span></div><div class="symbol">${pattern.replace('LABEL', code)}</div><div><p class="korean">${koreanName}</p><p class="english">${englishName}</p></div><div class="meta"><b>${feature}</b><br>${detail}</div></div><div class="face back" style="--accent:${accent}"><img src="${image}" alt="${koreanName} 자료 이미지"><div class="back-category">분류: ${koreanType}</div><div class="back-label"><strong>${code} · ${koreanName}</strong><span>${koreanType} / ${englishType}</span></div></div></div></article>`;
+    }).join('');
+    const cards = [...document.querySelectorAll('.card')];
+    const wraps = [...document.querySelectorAll('.card-wrap')];
+    const count = document.querySelector('#count');
+    count.textContent = '00 / 25';
+    const updateCount = () => { count.textContent = `${String(cards.filter(card => card.classList.contains('is-flipped')).length).padStart(2, '0')} / 25`; };
+    cards.forEach(card => {
+      const flip = () => { card.classList.toggle('is-flipped'); updateCount(); };
+      card.addEventListener('click', flip);
+      card.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); } });
+    });
+    document.querySelector('#flipAll').addEventListener('click', () => { cards.forEach(card => card.classList.add('is-flipped')); updateCount(); });
+    document.querySelector('#reset').addEventListener('click', () => { cards.forEach(card => card.classList.remove('is-flipped')); updateCount(); });
+    document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.filter').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      const filter = button.dataset.filter;
+      wraps.forEach(wrap => { wrap.classList.toggle('is-hidden', filter !== 'all' && wrap.dataset.type !== filter); });
+    }));
+  </script>
+</body>
+</html>
